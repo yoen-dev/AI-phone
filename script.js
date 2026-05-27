@@ -7,6 +7,7 @@ const pages = {
   chat: document.getElementById('page-chat'),
   charSettings: document.getElementById('page-char-settings'),
   settings: document.getElementById('page-settings'),
+  contacts: document.getElementById('page-contacts'),
   moments: document.getElementById('page-moments'),
 };
 let pageHistory = ['home'];
@@ -656,8 +657,105 @@ document.getElementById('step2-cancel').addEventListener('click', () => hideModa
 document.getElementById('step2-confirm').addEventListener('click', () => { const v=document.getElementById('input-step2').value.trim(); if(!v) return; hideModal('modal-step2'); createCharacter(createNickname, v); });
 document.getElementById('input-step2').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('step2-confirm').click(); });
 
-['modal-new-chat','modal-step1','modal-step2','modal-confirm-delete','modal-model-picker','modal-msg-menu','modal-edit-msg','modal-new-moment'].forEach(id => { document.getElementById(id).addEventListener('click', e => { if(e.target.id===id) hideModal(id); }); });
+['modal-new-chat','modal-step1','modal-step2','modal-confirm-delete','modal-model-picker','modal-msg-menu','modal-edit-msg','modal-new-moment','modal-edit-moment','modal-add-group'].forEach(id => { document.getElementById(id).addEventListener('click', e => { if(e.target.id===id) hideModal(id); }); });
 document.getElementById('model-picker-cancel').addEventListener('click', () => hideModal('modal-model-picker'));
+
+// ---------- 动态页 ----------
+// ---------- Tab 切换（三页互通） ----------
+function switchToPage(targetPage) {
+  Object.values(pages).forEach(p => p.classList.remove('active'));
+  pages[targetPage].classList.add('active');
+  pageHistory = ['home', targetPage];
+}
+
+// 消息 tab
+['tab-messages', 'tab-messages-c', 'tab-messages-m'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', () => { renderChatList(); switchToPage('chatList'); });
+});
+// 联系人 tab
+['tab-contacts', 'tab-contacts-c', 'tab-contacts-m'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', () => { renderContacts(); switchToPage('contacts'); });
+});
+// 动态 tab
+['tab-moments', 'tab-moments-c', 'tab-moments-m'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', () => { renderMoments(); switchToPage('moments'); });
+});
+
+document.getElementById('moments-back').addEventListener('click', goBack);
+document.getElementById('contacts-back').addEventListener('click', goBack);
+
+// ---------- 联系人页 ----------
+let contactGroups = [];
+function saveGroups() { localStorage.setItem('nocturne_groups', JSON.stringify(contactGroups)); }
+function loadGroups() {
+  try { const d = localStorage.getItem('nocturne_groups'); if (d) contactGroups = JSON.parse(d); }
+  catch(e) { contactGroups = []; }
+  if (!contactGroups.length) contactGroups = [{ name: '全部好友', collapsed: false }];
+}
+
+function renderContacts() {
+  const list = document.getElementById('contacts-list');
+  list.innerHTML = '';
+
+  contactGroups.forEach((group, gi) => {
+    const div = document.createElement('div');
+    div.className = 'contact-group' + (group.collapsed ? ' collapsed' : '');
+
+    const members = characters.filter(c => (c.group || '全部好友') === group.name);
+
+    div.innerHTML = `
+      <div class="contact-group-header" data-group="${gi}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <span>${esc(group.name)}</span>
+        <span class="contact-group-count">${members.length}</span>
+      </div>
+      <div class="contact-group-items"></div>
+    `;
+
+    const itemsEl = div.querySelector('.contact-group-items');
+    members.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'contact-item';
+      item.innerHTML = `
+        <div class="chat-avatar">${getAvatarHtml(c.avatarImg, c.avatar || '😀')}</div>
+        <div class="chat-info">
+          <span class="chat-name">${esc(c.nickname || c.name)}</span>
+        </div>`;
+      item.addEventListener('click', () => openChat(c.id));
+      itemsEl.appendChild(item);
+    });
+
+    // 折叠/展开
+    div.querySelector('.contact-group-header').addEventListener('click', () => {
+      group.collapsed = !group.collapsed;
+      saveGroups();
+      renderContacts();
+    });
+
+    list.appendChild(div);
+  });
+}
+
+// 添加分组
+document.getElementById('btn-add-group').addEventListener('click', () => {
+  document.getElementById('input-group-name').value = '';
+  showModal('modal-add-group');
+  setTimeout(() => document.getElementById('input-group-name').focus(), 200);
+});
+document.getElementById('group-cancel').addEventListener('click', () => hideModal('modal-add-group'));
+document.getElementById('group-confirm').addEventListener('click', () => {
+  const name = document.getElementById('input-group-name').value.trim();
+  if (!name) return;
+  if (contactGroups.some(g => g.name === name)) { toast('分组已存在', 'error'); return; }
+  contactGroups.push({ name, collapsed: false });
+  saveGroups();
+  hideModal('modal-add-group');
+  renderContacts();
+  toast('分组已创建', 'success');
+});
 
 // ---------- 动态页 ----------
 function renderMoments() {
@@ -668,19 +766,15 @@ function renderMoments() {
   if (!moments.length) { empty.style.display = 'flex'; return; }
   empty.style.display = 'none';
 
-  // 按时间倒序
   const sorted = [...moments].sort((a, b) => b.time - a.time);
-  sorted.forEach((m, displayIdx) => {
+  sorted.forEach(m => {
     const realIdx = moments.indexOf(m);
     const card = document.createElement('div');
     card.className = 'moment-card';
 
-    // 找发布者信息
     let avatar, name;
-    if (m.authorId === 'me') {
-      avatar = '🧑';
-      name = '我';
-    } else {
+    if (m.authorId === 'me') { avatar = '🧑'; name = '我'; }
+    else {
       const char = getChar(m.authorId);
       avatar = char ? getAvatarHtml(char.avatarImg, char.avatar || '😀') : '😀';
       name = char ? (char.nickname || char.name) : '未知角色';
@@ -689,17 +783,22 @@ function renderMoments() {
     const liked = m.liked || false;
     const comments = m.comments || [];
 
-    let commentsHtml = '';
-    if (comments.length || true) {
-      commentsHtml = `<div class="moment-comments">`;
-      comments.forEach(c => {
-        commentsHtml += `<div class="moment-comment"><span class="moment-comment-name">${esc(c.name)}</span>: ${esc(c.text)}</div>`;
-      });
-      commentsHtml += `<div class="moment-comment-input-wrap">
-        <div class="moment-comment-avatar">🧑</div>
-        <input class="moment-comment-input" placeholder="友善的评论是交流的起点" data-moment-idx="${realIdx}">
-        <button class="moment-comment-send" data-moment-idx="${realIdx}">发送</button>
-      </div></div>`;
+    let commentsHtml = `<div class="moment-comments">`;
+    comments.forEach(c => {
+      commentsHtml += `<div class="moment-comment"><span class="moment-comment-name">${esc(c.name)}</span>: ${esc(c.text)}</div>`;
+    });
+    commentsHtml += `<div class="moment-comment-input-wrap">
+      <div class="moment-comment-avatar">🧑</div>
+      <input class="moment-comment-input" placeholder="友善的评论是交流的起点" data-moment-idx="${realIdx}">
+      <button class="moment-comment-send" data-moment-idx="${realIdx}">发送</button>
+    </div></div>`;
+
+    // 图片
+    let imgsHtml = '';
+    if (m.images && m.images.length) {
+      imgsHtml = '<div class="moment-images-preview">';
+      m.images.forEach(img => { imgsHtml += `<img class="moment-img-thumb" src="${img}">`; });
+      imgsHtml += '</div>';
     }
 
     card.innerHTML = `
@@ -709,122 +808,109 @@ function renderMoments() {
           <div class="moment-author-name">${esc(name)}</div>
           <div class="moment-time">${fmtMomentTime(m.time)}</div>
         </div>
-        <button class="moment-menu-btn">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-        </button>
+        <button class="moment-menu-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
       </div>
       <div class="moment-text">${esc(m.text)}</div>
+      ${imgsHtml}
       <div class="moment-actions">
-        <button class="moment-action-btn" data-comment-focus="${realIdx}" title="评论">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        </button>
-        <button class="moment-action-btn ${liked ? 'liked' : ''}" data-like-idx="${realIdx}" title="点赞">
-          <svg viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-        </button>
-        <button class="moment-action-btn" title="收藏">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        </button>
+        <button class="moment-action-btn" data-comment-focus="${realIdx}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+        <button class="moment-action-btn ${liked?'liked':''}" data-like-idx="${realIdx}"><svg viewBox="0 0 24 24" fill="${liked?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+        <button class="moment-action-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
       </div>
-      ${liked ? `<div class="moment-likes"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 我 觉得很赞</div>` : ''}
-      ${commentsHtml}
-    `;
+      ${liked ? '<div class="moment-likes"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 我 觉得很赞</div>' : ''}
+      ${commentsHtml}`;
+
     list.appendChild(card);
   });
 
-  // 绑定点赞
+  // 绑定
   list.querySelectorAll('[data-like-idx]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = parseInt(btn.dataset.likeIdx);
-      moments[idx].liked = !moments[idx].liked;
-      saveMoments();
-      renderMoments();
-    });
+    btn.addEventListener('click', () => { const i = parseInt(btn.dataset.likeIdx); moments[i].liked = !moments[i].liked; saveMoments(); renderMoments(); });
   });
-
-  // 绑定评论发送
   list.querySelectorAll('.moment-comment-send').forEach(btn => {
     btn.addEventListener('click', () => {
-      const idx = parseInt(btn.dataset.momentIdx);
-      const input = list.querySelector(`.moment-comment-input[data-moment-idx="${idx}"]`);
-      const text = input.value.trim();
-      if (!text) return;
-      if (!moments[idx].comments) moments[idx].comments = [];
-      moments[idx].comments.push({ name: '我', text, time: Date.now() });
-      saveMoments();
-      input.value = '';
-      renderMoments();
+      const i = parseInt(btn.dataset.momentIdx);
+      const input = list.querySelector(`.moment-comment-input[data-moment-idx="${i}"]`);
+      const text = input.value.trim(); if (!text) return;
+      if (!moments[i].comments) moments[i].comments = [];
+      moments[i].comments.push({ name: '我', text, time: Date.now() });
+      saveMoments(); input.value = ''; renderMoments();
     });
   });
-
-  // 绑定评论聚焦
   list.querySelectorAll('[data-comment-focus]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const idx = btn.dataset.commentFocus;
-      const input = list.querySelector(`.moment-comment-input[data-moment-idx="${idx}"]`);
+      const input = list.querySelector(`.moment-comment-input[data-moment-idx="${btn.dataset.commentFocus}"]`);
       if (input) input.focus();
     });
   });
 }
 
-function fmtMomentTime(ts) {
-  const diff = Date.now() - ts;
-  if (diff < 60000) return '刚刚';
-  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
-  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
-  if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
-  const d = new Date(ts);
-  return (d.getMonth()+1) + '月' + d.getDate() + '日';
-}
+// 发动态流程
+let momentImages = [];
+document.getElementById('btn-new-moment').addEventListener('click', () => showModal('modal-new-moment'));
+document.getElementById('moment-cancel').addEventListener('click', () => hideModal('modal-new-moment'));
 
-function openNewMoment() {
+document.getElementById('moment-opt-text').addEventListener('click', () => {
+  hideModal('modal-new-moment');
+  openMomentEditor(false);
+});
+document.getElementById('moment-opt-photo').addEventListener('click', () => {
+  hideModal('modal-new-moment');
+  openMomentEditor(true);
+});
+document.getElementById('moment-opt-camera').addEventListener('click', () => {
+  hideModal('modal-new-moment');
+  toast('拍照功能暂不支持', '');
+});
+
+function openMomentEditor(withPhoto) {
   const select = document.getElementById('moment-author');
-  // 填充角色列表
   select.innerHTML = '<option value="me">我自己</option>';
-  characters.forEach(c => {
-    select.innerHTML += `<option value="${c.id}">${esc(c.nickname || c.name)}</option>`;
-  });
+  characters.forEach(c => { select.innerHTML += `<option value="${c.id}">${esc(c.nickname||c.name)}</option>`; });
   document.getElementById('moment-text').value = '';
-  showModal('modal-new-moment');
+  document.getElementById('moment-images-preview').innerHTML = '';
+  momentImages = [];
+  showModal('modal-edit-moment');
+  if (withPhoto) setTimeout(() => document.getElementById('moment-file-input').click(), 300);
 }
 
-function publishMoment() {
-  const authorId = document.getElementById('moment-author').value;
+document.getElementById('moment-file-input').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files);
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      momentImages.push(ev.target.result);
+      const preview = document.getElementById('moment-images-preview');
+      const img = document.createElement('img');
+      img.className = 'moment-img-thumb';
+      img.src = ev.target.result;
+      preview.appendChild(img);
+    };
+    reader.readAsDataURL(f);
+  });
+});
+
+document.getElementById('moment-edit-cancel').addEventListener('click', () => hideModal('modal-edit-moment'));
+document.getElementById('moment-publish').addEventListener('click', () => {
   const text = document.getElementById('moment-text').value.trim();
-  if (!text) return;
+  if (!text && !momentImages.length) return;
   moments.push({
     id: 'm_' + Date.now(),
-    authorId,
-    text,
-    time: Date.now(),
-    liked: false,
-    comments: [],
+    authorId: document.getElementById('moment-author').value,
+    text: text,
+    images: [...momentImages],
+    time: Date.now(), liked: false, comments: [],
   });
   saveMoments();
-  hideModal('modal-new-moment');
+  hideModal('modal-edit-moment');
   renderMoments();
   toast('动态已发布', 'success');
-}
-
-// Tab 切换
-document.getElementById('tab-moments').addEventListener('click', () => {
-  renderMoments();
-  navigateTo('moments');
 });
-document.getElementById('tab-messages-2').addEventListener('click', () => {
-  renderChatList();
-  // 回到聊天列表
-  pageHistory = ['home', 'chatList'];
-  Object.values(pages).forEach(p => p.classList.remove('active'));
-  pages.chatList.classList.add('active');
-});
-document.getElementById('moments-back').addEventListener('click', goBack);
-document.getElementById('btn-new-moment').addEventListener('click', openNewMoment);
-document.getElementById('moment-cancel').addEventListener('click', () => hideModal('modal-new-moment'));
-document.getElementById('moment-publish').addEventListener('click', publishMoment);
 
 // ---------- 初始化 ----------
 loadChars();
 loadMoments();
+loadGroups();
 loadConfig();
 document.documentElement.dataset.theme = config.theme;
 console.log('Nocturne 1.0 loaded');

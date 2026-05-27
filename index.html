@@ -63,9 +63,25 @@
             <div class="empty-sub">点击右上角 + 创建角色开始聊天</div>
           </div>
         </div>
-        <div class="tab-bar" id="main-tab-bar">
-          <button class="tab active" id="tab-messages"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>消息</span></button>
-          <button class="tab" id="tab-moments"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>动态</span></button>
+        <div class="tab-bar-3">
+          <button class="tab-3 active" id="tab-messages"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>消息</span></button>
+          <button class="tab-3" id="tab-contacts"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>联系人</span></button>
+          <button class="tab-3" id="tab-moments"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>动态</span></button>
+        </div>
+      </section>
+
+      <!-- ====== 联系人页 ====== -->
+      <section class="page" id="page-contacts">
+        <div class="page-header">
+          <button class="header-btn" id="contacts-back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <span class="header-title">联系人</span>
+          <button class="header-btn" id="btn-add-group"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
+        </div>
+        <div class="contacts-list" id="contacts-list"></div>
+        <div class="tab-bar-3">
+          <button class="tab-3" id="tab-messages-c"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>消息</span></button>
+          <button class="tab-3 active" id="tab-contacts-c"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>联系人</span></button>
+          <button class="tab-3" id="tab-moments-c"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>动态</span></button>
         </div>
       </section>
 
@@ -73,24 +89,34 @@
       <section class="page" id="page-moments">
         <div class="page-header">
           <button class="header-btn" id="moments-back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-          <span class="header-title">动态</span>
-          <button class="header-btn" id="btn-new-moment">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          </button>
+          <span class="header-title">好友动态</span>
+          <button class="header-btn" id="btn-new-moment"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         </div>
 
-        <!-- 动态列表 -->
-        <div class="moments-list" id="moments-list">
-          <div class="empty-state" id="moments-empty">
-            <div class="empty-icon">📝</div>
-            <div class="empty-text">暂无动态</div>
-            <div class="empty-sub">角色和你都可以发动态哦</div>
+        <!-- 动态封面 -->
+        <div class="moments-scroll" id="moments-scroll">
+          <div class="moments-cover" id="moments-cover">
+            <div class="moments-cover-bg" id="moments-cover-bg"></div>
+            <div class="moments-cover-info">
+              <div class="moments-cover-avatar" id="moments-cover-avatar">🧑</div>
+              <div class="moments-cover-name" id="moments-cover-name">我的动态</div>
+            </div>
+          </div>
+
+          <!-- 动态列表 -->
+          <div class="moments-list" id="moments-list">
+            <div class="empty-state" id="moments-empty">
+              <div class="empty-icon">📝</div>
+              <div class="empty-text">暂无动态</div>
+              <div class="empty-sub">角色和你都可以发动态哦</div>
+            </div>
           </div>
         </div>
 
-        <div class="tab-bar" id="moments-tab-bar">
-          <button class="tab" id="tab-messages-2"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>消息</span></button>
-          <button class="tab active" id="tab-moments-2"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>动态</span></button>
+        <div class="tab-bar-3">
+          <button class="tab-3" id="tab-messages-m"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>消息</span></button>
+          <button class="tab-3" id="tab-contacts-m"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>联系人</span></button>
+          <button class="tab-3 active" id="tab-moments-m"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>动态</span></button>
         </div>
       </section>
 
@@ -385,22 +411,45 @@
       </div>
     </div>
 
-    <!-- 弹窗: 发动态 -->
+    <!-- 弹窗: 发动态选项 -->
     <div class="modal-overlay" id="modal-new-moment">
-      <div class="modal-card modal-card-tall">
+      <div class="modal-card">
         <div class="modal-title">发布动态</div>
+        <button class="modal-option" id="moment-opt-text"><span>📝 纯文字</span></button>
+        <button class="modal-option" id="moment-opt-photo"><span>🖼️ 从相册选择</span></button>
+        <button class="modal-option" id="moment-opt-camera"><span>📷 拍照</span></button>
+        <button class="modal-cancel" id="moment-cancel">取消</button>
+      </div>
+    </div>
+
+    <!-- 弹窗: 编辑动态 -->
+    <div class="modal-overlay" id="modal-edit-moment">
+      <div class="modal-card modal-card-tall">
+        <div class="modal-title">编辑动态</div>
         <div class="moment-post-form">
           <div class="settings-row">
             <span class="settings-label">发布者</span>
-            <select class="settings-select" id="moment-author">
-              <option value="me">我自己</option>
-            </select>
+            <select class="settings-select" id="moment-author"></select>
           </div>
-          <textarea class="modal-textarea" id="moment-text" rows="4" placeholder="说点什么..."></textarea>
+          <textarea class="modal-textarea" id="moment-text" rows="5" placeholder="这一刻的想法..."></textarea>
+          <div id="moment-images-preview" class="moment-images-preview"></div>
+          <input type="file" accept="image/*" multiple id="moment-file-input" style="display:none">
         </div>
         <div class="modal-actions">
-          <button class="modal-act-btn" id="moment-cancel">取消</button>
+          <button class="modal-act-btn" id="moment-edit-cancel">取消</button>
           <button class="modal-act-btn modal-act-primary" id="moment-publish">发布</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 弹窗: 添加分组 -->
+    <div class="modal-overlay" id="modal-add-group">
+      <div class="modal-card">
+        <div class="modal-title">新建分组</div>
+        <input type="text" class="modal-input" id="input-group-name" placeholder="分组名称">
+        <div class="modal-actions">
+          <button class="modal-act-btn" id="group-cancel">取消</button>
+          <button class="modal-act-btn modal-act-primary" id="group-confirm">确定</button>
         </div>
       </div>
     </div>

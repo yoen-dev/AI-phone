@@ -258,14 +258,14 @@ body {
 .empty-text { font-size: 15px; font-weight: 500; }
 .empty-sub { font-size: 12px; opacity: 0.6; margin-top: 6px; }
 
-/* ========== Tab 栏 ========== */
-.tab-bar {
+/* ========== Tab 栏（3 个） ========== */
+.tab-bar-3 {
   display: flex;
   border-top: 0.5px solid var(--divider);
   padding: 6px 0 2px;
   flex-shrink: 0;
 }
-.tab {
+.tab-3 {
   flex: 1;
   display: flex; flex-direction: column;
   align-items: center; gap: 3px;
@@ -274,7 +274,111 @@ body {
   transition: opacity 0.15s;
   padding: 4px 0;
 }
-.tab.active { opacity: 1; color: var(--accent); }
+.tab-3.active { opacity: 1; color: var(--accent); }
+
+/* ========== 联系人页 ========== */
+.contacts-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 14px;
+  scrollbar-width: none;
+}
+.contacts-list::-webkit-scrollbar { display: none; }
+.contact-group {
+  margin-bottom: 4px;
+}
+.contact-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 4px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.contact-group-header svg {
+  width: 14px; height: 14px;
+  transition: transform 0.2s;
+  opacity: 0.5;
+}
+.contact-group-header.collapsed svg { transform: rotate(-90deg); }
+.contact-group-count {
+  font-size: 11px;
+  opacity: 0.5;
+  font-weight: 400;
+}
+.contact-group-items {}
+.contact-group.collapsed .contact-group-items { display: none; }
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  border-bottom: 0.5px solid var(--divider);
+  cursor: pointer;
+}
+.contact-item:active { background: var(--divider); }
+.contact-item:last-child { border-bottom: none; }
+
+/* ========== 动态封面 ========== */
+.moments-scroll {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.moments-scroll::-webkit-scrollbar { display: none; }
+.moments-cover {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+.moments-cover-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #2a2a3a, #1a1a2a, #3a2a3a);
+  background-size: cover;
+  background-position: center;
+}
+.moments-cover-info {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.moments-cover-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--bg-widget-2);
+  border: 2px solid rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  overflow: hidden;
+  cursor: pointer;
+}
+.moments-cover-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.moments-cover-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* 动态图片预览 */
+.moment-images-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0;
+}
+.moment-img-thumb {
+  width: 60px; height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 0.5px solid var(--border-softer);
+}
 
 /* ========== 聊天对话页 ========== */
 .messages {
