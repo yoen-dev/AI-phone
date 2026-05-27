@@ -696,7 +696,8 @@ function renderMoments() {
         commentsHtml += `<div class="moment-comment"><span class="moment-comment-name">${esc(c.name)}</span>: ${esc(c.text)}</div>`;
       });
       commentsHtml += `<div class="moment-comment-input-wrap">
-        <input class="moment-comment-input" placeholder="评论..." data-moment-idx="${realIdx}">
+        <div class="moment-comment-avatar">🧑</div>
+        <input class="moment-comment-input" placeholder="友善的评论是交流的起点" data-moment-idx="${realIdx}">
         <button class="moment-comment-send" data-moment-idx="${realIdx}">发送</button>
       </div></div>`;
     }
@@ -708,18 +709,23 @@ function renderMoments() {
           <div class="moment-author-name">${esc(name)}</div>
           <div class="moment-time">${fmtMomentTime(m.time)}</div>
         </div>
+        <button class="moment-menu-btn">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </button>
       </div>
       <div class="moment-text">${esc(m.text)}</div>
       <div class="moment-actions">
-        <button class="moment-action-btn ${liked ? 'liked' : ''}" data-like-idx="${realIdx}">
-          <svg viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          <span>${liked ? '已赞' : '赞'}</span>
-        </button>
-        <button class="moment-action-btn" data-comment-focus="${realIdx}">
+        <button class="moment-action-btn" data-comment-focus="${realIdx}" title="评论">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <span>评论</span>
+        </button>
+        <button class="moment-action-btn ${liked ? 'liked' : ''}" data-like-idx="${realIdx}" title="点赞">
+          <svg viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <button class="moment-action-btn" title="收藏">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         </button>
       </div>
+      ${liked ? `<div class="moment-likes"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 我 觉得很赞</div>` : ''}
       ${commentsHtml}
     `;
     list.appendChild(card);
