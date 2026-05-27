@@ -344,6 +344,62 @@ body {
   padding: 0 4px;
 }
 
+/* 多选模式 */
+.msg-row.selectable {
+  cursor: pointer;
+  position: relative;
+}
+.msg-row.selectable::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-tertiary);
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+.msg-row.selectable.selected::before {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.msg-row.selectable .msg-avatar { margin-left: 22px; }
+.msg-row.selectable.me .msg-avatar { margin-left: 0; margin-right: 22px; }
+.msg-row.selectable.me::before {
+  left: auto;
+  right: -4px;
+}
+.multiselect-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-top: 0.5px solid var(--divider);
+  flex-shrink: 0;
+}
+.multiselect-bar .ms-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.multiselect-bar .ms-actions {
+  display: flex;
+  gap: 12px;
+}
+.ms-btn {
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 14px;
+  background: var(--bg-widget-2);
+  border: 0.5px solid var(--border-softer);
+  color: var(--text-primary);
+  transition: background 0.12s;
+}
+.ms-btn:active { background: var(--divider); }
+.ms-btn.danger { color: #ff453a; }
+.ms-btn.cancel-ms { color: var(--text-tertiary); }
+
 /* 消息区工具栏 */
 .msg-toolbar {
   display: flex;
@@ -591,47 +647,6 @@ body {
   transition: background-color 9999s ease-in-out 0s;
 }
 
-/* ========== Toast 提示 ========== */
-.toast-container {
-  position: absolute;
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 200;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  pointer-events: none;
-}
-.toast {
-  background: var(--bg-widget);
-  border: 0.5px solid var(--border-soft);
-  color: var(--text-primary);
-  font-size: 13px;
-  padding: 10px 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  opacity: 0;
-  transform: translateY(-10px);
-  animation: toast-in 0.25s ease forwards, toast-out 0.25s ease 2s forwards;
-  white-space: nowrap;
-  max-width: 90%;
-  text-align: center;
-}
-.toast.error {
-  border-color: #ff453a;
-  color: #ff453a;
-}
-.toast.success {
-  border-color: #30d158;
-}
-@keyframes toast-in {
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes toast-out {
-  to { opacity: 0; transform: translateY(-10px); }
-}
 .avatar-row { gap: 12px; }
 .avatar-preview {
   width: 44px; height: 44px;

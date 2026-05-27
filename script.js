@@ -109,6 +109,14 @@ function renderMessages(c) {
 function appendBubble(c, msg, text, isNovel, hideAvatar, msgIndex) {
   const row = document.createElement('div');
   row.className = `msg-row ${msg.role === 'user' ? 'me' : ''}`;
+  row.dataset.msgIdx = msgIndex;
+
+  if (multiSelectMode) {
+    row.classList.add('selectable');
+    if (selectedMsgs.has(msgIndex)) row.classList.add('selected');
+    row.addEventListener('click', () => toggleMsgSelect(msgIndex));
+  }
+
   const av = msg.role === 'user' ? getAvatarHtml(c.myAvatarImg, c.myAvatar || '🧑') : getAvatarHtml(c.avatarImg, c.avatar || '😀');
   const bubbleClass = isNovel ? 'msg-bubble novel-bubble' : 'msg-bubble';
   const content = isNovel ? formatNovelText(text) : formatChatText(text);
@@ -116,8 +124,8 @@ function appendBubble(c, msg, text, isNovel, hideAvatar, msgIndex) {
   const stamp = hideAvatar ? '' : `<div class="msg-stamp">${fmtShort(msg.time)}</div>`;
   row.innerHTML = `<div class="msg-avatar"${avatarStyle}>${av}</div><div class="msg-body"><div class="${bubbleClass}">${content}</div>${stamp}</div>`;
 
-  // 长按/右键事件
-  if (msgIndex !== undefined) {
+  // 长按/右键（非多选模式下）
+  if (msgIndex !== undefined && !multiSelectMode) {
     let timer;
     row.addEventListener('touchstart', (e) => { timer = setTimeout(() => { e.preventDefault(); openMsgMenu(msgIndex); }, 500); }, {passive: false});
     row.addEventListener('touchend', () => clearTimeout(timer));
@@ -353,7 +361,6 @@ function saveCharSettings() {
   c.novelMax = parseInt(document.getElementById('set-novel-max').value) || 500;
   saveChars();
   chatTitle.textContent = c.nickname || c.name;
-  goBack();
   toast('已保存', 'success');
 }
 
@@ -519,6 +526,85 @@ document.getElementById('msg-menu-copy').addEventListener('click', () => {
 });
 
 document.getElementById('msg-menu-cancel').addEventListener('click', () => hideModal('modal-msg-menu'));
+
+// 多选模式
+let multiSelectMode = false;
+let selectedMsgs = new Set();
+
+document.getElementById('msg-menu-multiselect').addEventListener('click', () => {
+  hideModal('modal-msg-menu');
+  enterMultiSelect();
+});
+
+function enterMultiSelect() {
+  multiSelectMode = true;
+  selectedMsgs.clear();
+  const c = getChar(currentCharId);
+  if (!c) return;
+  renderMessages(c);
+  // 显示多选工具栏，隐藏普通工具栏和输入栏
+  document.querySelector('.msg-toolbar').style.display = 'none';
+  document.querySelector('.input-bar').style.display = 'none';
+  showMultiSelectBar();
+}
+
+function exitMultiSelect() {
+  multiSelectMode = false;
+  selectedMsgs.clear();
+  const c = getChar(currentCharId);
+  if (!c) return;
+  renderMessages(c);
+  document.querySelector('.msg-toolbar').style.display = '';
+  document.querySelector('.input-bar').style.display = '';
+  removeMultiSelectBar();
+}
+
+function showMultiSelectBar() {
+  removeMultiSelectBar();
+  const bar = document.createElement('div');
+  bar.className = 'multiselect-bar';
+  bar.id = 'multiselect-bar';
+  bar.innerHTML = `
+    <span class="ms-count"><span id="ms-count-num">0</span> 条已选</span>
+    <div class="ms-actions">
+      <button class="ms-btn danger" id="ms-delete-selected">删除</button>
+      <button class="ms-btn cancel-ms" id="ms-cancel">取消</button>
+    </div>`;
+  const chatPage = document.getElementById('page-chat');
+  chatPage.appendChild(bar);
+  document.getElementById('ms-delete-selected').addEventListener('click', () => {
+    const c = getChar(currentCharId);
+    if (!c || !selectedMsgs.size) return;
+    const indices = Array.from(selectedMsgs).sort((a, b) => b - a);
+    indices.forEach(i => c.messages.splice(i, 1));
+    saveChars();
+    toast(`已删除 ${indices.length} 条消息`, 'success');
+    exitMultiSelect();
+  });
+  document.getElementById('ms-cancel').addEventListener('click', exitMultiSelect);
+}
+
+function removeMultiSelectBar() {
+  const bar = document.getElementById('multiselect-bar');
+  if (bar) bar.remove();
+}
+
+function toggleMsgSelect(idx) {
+  if (selectedMsgs.has(idx)) {
+    selectedMsgs.delete(idx);
+  } else {
+    selectedMsgs.add(idx);
+  }
+  // 更新计数
+  const countEl = document.getElementById('ms-count-num');
+  if (countEl) countEl.textContent = selectedMsgs.size;
+  // 更新视觉
+  const rows = messagesEl.querySelectorAll('.msg-row');
+  rows.forEach(row => {
+    const i = parseInt(row.dataset.msgIdx);
+    if (!isNaN(i)) row.classList.toggle('selected', selectedMsgs.has(i));
+  });
+}
 
 document.getElementById('edit-msg-cancel').addEventListener('click', () => hideModal('modal-edit-msg'));
 document.getElementById('edit-msg-confirm').addEventListener('click', () => {
