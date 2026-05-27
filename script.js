@@ -214,7 +214,7 @@ async function rerollLastReply() {
 
 async function callAPI(char, overrideCfg) {
   const cfg = overrideCfg || config;
-  const sysPrompt = buildSystemPrompt(char);
+  const sysPrompt = PROMPTS.build(char);
   const recentMsgs = char.messages.slice(-config.contextCount);
 
   const msgs = [{ role: 'system', content: sysPrompt }];
@@ -244,49 +244,6 @@ async function callAPI(char, overrideCfg) {
   if (!res.ok) { const e = await res.text(); throw new Error(`${res.status}: ${e.slice(0, 200)}`); }
   const data = await res.json();
   return data.choices?.[0]?.message?.content || '[空回复]';
-}
-
-function buildSystemPrompt(char) {
-  let prompt = '';
-  if (char.persona) prompt += char.persona + '\n\n';
-  if (char.name) prompt += `你的名字是${char.name}。\n`;
-  if (char.myName) prompt += `用户的名字是${char.myName}。\n`;
-  if (char.myPersona) prompt += `关于用户: ${char.myPersona}\n`;
-  if (!prompt) prompt = `你是一个名叫${char.nickname || char.name}的角色，请以这个角色的身份和用户聊天。\n`;
-
-  const mode = char.replyMode || 'chat';
-
-  if (mode === 'chat') {
-    prompt += `\n【回复格式要求】
-你正在用手机聊天。像朋友一样自然地回复，不要长篇大论。
-你可以回复一句，也可以回复好几句。如果要回复多句，每句之间用 ||| 分隔。
-例如: "哈哈哈哈|||你怎么这么搞笑|||笑死我了"
-注意：
-- 不要使用引号包裹整段回复
-- 每句保持简短自然，像发微信一样
-- ||| 是分隔符，不要让用户看到`;
-  } else if (mode === 'narrate') {
-    prompt += `\n【回复格式要求】
-你正在用手机聊天，但你的回复需要包含心理活动和环境描写。
-对话内容正常输出，心理活动/内心独白/环境描写用 *星号* 包裹。
-多句对话之间用 ||| 分隔。
-例如: "*看到消息后嘴角微微上扬*|||嗯，我知道了|||*心想今天心情真好*"
-注意：
-- 对话部分像正常聊天，简短自然
-- *旁白* 部分可以描写心理、表情、动作、环境
-- ||| 是分隔符`;
-  } else if (mode === 'novel') {
-    const min = char.novelMin || 100;
-    const max = char.novelMax || 500;
-    prompt += `\n【回复格式要求】
-请用小说/描写模式回复，包含角色的动作、心理、对话、环境描写。
-用第三人称或角色视角书写。对话部分用「」包裹。
-字数要求: ${min}~${max}字。
-不要使用 ||| 分隔符，整段输出即可。
-输出风格类似轻小说或网文的场景描写。`;
-  }
-
-  return prompt.trim();
 }
 
 // 模式切换 UI
@@ -475,16 +432,6 @@ function createCharacter(nickname, realname) {
   saveChars(); renderChatList();
 }
 
-// ---------- Toast 提示 ----------
-function toast(msg, type) {
-  const container = document.getElementById('toast-container');
-  const el = document.createElement('div');
-  el.className = 'toast' + (type ? ' ' + type : '');
-  el.textContent = msg;
-  container.appendChild(el);
-  setTimeout(() => el.remove(), 2500);
-}
-
 // ---------- 工具函数 ----------
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function trunc(s, n) { return s.length > n ? s.slice(0, n) + '...' : s; }
@@ -492,7 +439,6 @@ function fmtTime(ts) { const d=new Date(ts),now=new Date(),diff=now-d; if(diff<8
 function fmtShort(ts) { const d=new Date(ts); return pad(d.getHours())+':'+pad(d.getMinutes()); }
 function fmtDateLabel(ts) { const d=new Date(ts),now=new Date(); if(d.toDateString()===now.toDateString()) return '今天'; if(d.toDateString()===new Date(now-86400000).toDateString()) return '昨天'; return (d.getMonth()+1)+'月'+d.getDate()+'日'; }
 function pad(n) { return n.toString().padStart(2,'0'); }
-function updateClock() { const n=new Date(); document.getElementById('status-time').textContent=pad(n.getHours())+':'+pad(n.getMinutes()); }
 
 // Toast 提示
 let toastTimer = null;
@@ -626,6 +572,4 @@ document.getElementById('model-picker-cancel').addEventListener('click', () => h
 loadChars();
 loadConfig();
 document.documentElement.dataset.theme = config.theme;
-updateClock();
-setInterval(updateClock, 10000);
 console.log('Nocturne 1.0 loaded');
