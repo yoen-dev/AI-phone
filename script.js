@@ -83,38 +83,30 @@ function renderMessages(c) {
   messagesEl.innerHTML = '';
   if (!c.messages.length) { messagesEl.innerHTML = '<div class="msg-time-divider"><span>开始聊天吧</span></div>'; return; }
 
-  // 找最后一条 assistant 消息的索引
-  let lastAssistantIdx = -1;
-  for (let i = c.messages.length - 1; i >= 0; i--) {
-    if (c.messages[i].role === 'assistant') { lastAssistantIdx = i; break; }
-  }
-
   let lastDate = '';
   c.messages.forEach((msg, idx) => {
     const d = new Date(msg.time).toLocaleDateString();
     if (d !== lastDate) { lastDate = d; const div = document.createElement('div'); div.className = 'msg-time-divider'; div.innerHTML = `<span>${fmtDateLabel(msg.time)}</span>`; messagesEl.appendChild(div); }
 
-    const isLast = idx === lastAssistantIdx;
-
     if (msg.role === 'user') {
-      appendBubble(c, msg, msg.text, false, false, idx, false);
+      appendBubble(c, msg, msg.text, false, false, idx);
     } else {
       const mode = c.replyMode || 'chat';
       if (mode === 'novel') {
-        appendBubble(c, msg, msg.text, true, false, idx, isLast);
+        appendBubble(c, msg, msg.text, true, false, idx);
       } else {
         const parts = msg.text.split('|||').map(s => s.trim()).filter(Boolean);
         if (parts.length <= 1) {
-          appendBubble(c, msg, msg.text, false, false, idx, isLast);
+          appendBubble(c, msg, msg.text, false, false, idx);
         } else {
-          parts.forEach((part, i) => appendBubble(c, msg, part, false, i > 0, idx, isLast && i === parts.length - 1));
+          parts.forEach((part, i) => appendBubble(c, msg, part, false, i > 0, idx));
         }
       }
     }
   });
 }
 
-function appendBubble(c, msg, text, isNovel, hideAvatar, msgIndex, isLastAssistant) {
+function appendBubble(c, msg, text, isNovel, hideAvatar, msgIndex) {
   const row = document.createElement('div');
   row.className = `msg-row ${msg.role === 'user' ? 'me' : ''}`;
   const av = msg.role === 'user' ? getAvatarHtml(c.myAvatarImg, c.myAvatar || '🧑') : getAvatarHtml(c.avatarImg, c.avatar || '😀');
@@ -122,18 +114,15 @@ function appendBubble(c, msg, text, isNovel, hideAvatar, msgIndex, isLastAssista
   const content = isNovel ? formatNovelText(text) : formatChatText(text);
   const avatarStyle = hideAvatar ? ' style="visibility:hidden"' : '';
   const stamp = hideAvatar ? '' : `<div class="msg-stamp">${fmtShort(msg.time)}</div>`;
-  const rerollHtml = isLastAssistant && !hideAvatar ? `<button class="msg-reroll" onclick="rerollLastReply()">↻ 重新生成</button>` : '';
-  row.innerHTML = `<div class="msg-avatar"${avatarStyle}>${av}</div><div class="msg-body"><div class="${bubbleClass}">${content}</div>${stamp}${rerollHtml}</div>`;
+  row.innerHTML = `<div class="msg-avatar"${avatarStyle}>${av}</div><div class="msg-body"><div class="${bubbleClass}">${content}</div>${stamp}</div>`;
 
-  // 长按事件
+  // 长按/右键事件
   if (msgIndex !== undefined) {
     let timer;
-    const bubble = row;
-    bubble.addEventListener('touchstart', () => { timer = setTimeout(() => openMsgMenu(msgIndex), 500); });
-    bubble.addEventListener('touchend', () => clearTimeout(timer));
-    bubble.addEventListener('touchmove', () => clearTimeout(timer));
-    // 桌面端右键
-    bubble.addEventListener('contextmenu', (e) => { e.preventDefault(); openMsgMenu(msgIndex); });
+    row.addEventListener('touchstart', (e) => { timer = setTimeout(() => { e.preventDefault(); openMsgMenu(msgIndex); }, 500); }, {passive: false});
+    row.addEventListener('touchend', () => clearTimeout(timer));
+    row.addEventListener('touchmove', () => clearTimeout(timer));
+    row.addEventListener('contextmenu', (e) => { e.preventDefault(); openMsgMenu(msgIndex); });
   }
 
   messagesEl.appendChild(row);
@@ -525,6 +514,7 @@ document.getElementById('btn-chat-settings').addEventListener('click', openCharS
 document.getElementById('btn-send').addEventListener('click', sendMessage);
 msgInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 document.getElementById('btn-ai-reply').addEventListener('click', triggerAIReply);
+document.getElementById('btn-reroll').addEventListener('click', rerollLastReply);
 
 // 模式切换联动
 document.getElementById('set-reply-mode').addEventListener('change', (e) => updateModeUI(e.target.value));
