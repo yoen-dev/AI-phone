@@ -880,36 +880,148 @@ body {
   padding: 20px 0 10px;
 }
 
+/* ========== 动态页（朋友圈风格） ========== */
+.moments-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 14px;
+  scrollbar-width: none;
+}
+.moments-list::-webkit-scrollbar { display: none; }
+
+.moment-card {
+  padding: 14px 0;
+  border-bottom: 0.5px solid var(--divider);
+}
+.moment-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.moment-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--bg-widget-2);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  overflow: hidden;
+}
+.moment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.moment-author-info { flex: 1; }
+.moment-author-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent);
+}
+.moment-time {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.moment-text {
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.moment-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+.moment-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+.moment-action-btn:active { color: var(--accent); }
+.moment-action-btn.liked { color: #ff453a; }
+.moment-action-btn svg { width: 16px; height: 16px; }
+
+/* 评论区 */
+.moment-comments {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--bg-widget);
+  border-radius: 8px;
+  font-size: 13px;
+}
+.moment-comment {
+  padding: 4px 0;
+  line-height: 1.5;
+}
+.moment-comment-name {
+  color: var(--accent);
+  font-weight: 500;
+}
+.moment-comment-input-wrap {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  align-items: center;
+}
+.moment-comment-input {
+  flex: 1;
+  background: var(--bg-base);
+  border: 0.5px solid var(--border-softer);
+  border-radius: 14px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--text-primary);
+  outline: none;
+}
+.moment-comment-input::placeholder { color: var(--text-tertiary); }
+.moment-comment-send {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* 发动态表单 */
+.moment-post-form {
+  padding: 0 16px 8px;
+}
+.moment-post-form .settings-row {
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--divider);
+}
+
 /* ========== Toast 提示 ========== */
 .toast {
-  position: absolute;
-  bottom: 60px;
+  position: fixed;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--bg-widget);
-  border: 0.5px solid var(--border-soft);
-  color: var(--text-primary);
-  font-size: 13px;
-  padding: 10px 20px;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 14px;
+  padding: 12px 24px;
   border-radius: 12px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s, transform 0.25s;
-  z-index: 200;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 9999;
   max-width: 80%;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 .toast.show {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translate(-50%, -50%) scale(1);
 }
 .toast.error {
-  border-color: #ff453a;
-  color: #ff453a;
+  background: rgba(255, 69, 58, 0.9);
 }
 .toast.success {
-  border-color: #30d158;
+  background: rgba(48, 209, 88, 0.15);
+  border: 1px solid rgba(48, 209, 88, 0.5);
   color: #30d158;
 }
 

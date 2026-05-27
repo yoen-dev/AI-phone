@@ -7,6 +7,7 @@ const pages = {
   chat: document.getElementById('page-chat'),
   charSettings: document.getElementById('page-char-settings'),
   settings: document.getElementById('page-settings'),
+  moments: document.getElementById('page-moments'),
 };
 let pageHistory = ['home'];
 function navigateTo(id) {
@@ -43,6 +44,10 @@ let config = {
 
 function saveChars() { localStorage.setItem('nocturne_chars', JSON.stringify(characters)); }
 function loadChars() { try { const d = localStorage.getItem('nocturne_chars'); if (d) characters = JSON.parse(d); } catch(e) { characters = []; } }
+
+let moments = [];
+function saveMoments() { localStorage.setItem('nocturne_moments', JSON.stringify(moments)); }
+function loadMoments() { try { const d = localStorage.getItem('nocturne_moments'); if (d) moments = JSON.parse(d); } catch(e) { moments = []; } }
 function saveConfig() { localStorage.setItem('nocturne_config', JSON.stringify(config)); }
 function loadConfig() { try { const d = localStorage.getItem('nocturne_config'); if (d) Object.assign(config, JSON.parse(d)); } catch(e) {} }
 function getChar(id) { return characters.find(c => c.id === id); }
@@ -651,11 +656,169 @@ document.getElementById('step2-cancel').addEventListener('click', () => hideModa
 document.getElementById('step2-confirm').addEventListener('click', () => { const v=document.getElementById('input-step2').value.trim(); if(!v) return; hideModal('modal-step2'); createCharacter(createNickname, v); });
 document.getElementById('input-step2').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('step2-confirm').click(); });
 
-['modal-new-chat','modal-step1','modal-step2','modal-confirm-delete','modal-model-picker','modal-msg-menu','modal-edit-msg'].forEach(id => { document.getElementById(id).addEventListener('click', e => { if(e.target.id===id) hideModal(id); }); });
+['modal-new-chat','modal-step1','modal-step2','modal-confirm-delete','modal-model-picker','modal-msg-menu','modal-edit-msg','modal-new-moment'].forEach(id => { document.getElementById(id).addEventListener('click', e => { if(e.target.id===id) hideModal(id); }); });
 document.getElementById('model-picker-cancel').addEventListener('click', () => hideModal('modal-model-picker'));
+
+// ---------- 动态页 ----------
+function renderMoments() {
+  const list = document.getElementById('moments-list');
+  const empty = document.getElementById('moments-empty');
+  list.querySelectorAll('.moment-card').forEach(el => el.remove());
+
+  if (!moments.length) { empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+
+  // 按时间倒序
+  const sorted = [...moments].sort((a, b) => b.time - a.time);
+  sorted.forEach((m, displayIdx) => {
+    const realIdx = moments.indexOf(m);
+    const card = document.createElement('div');
+    card.className = 'moment-card';
+
+    // 找发布者信息
+    let avatar, name;
+    if (m.authorId === 'me') {
+      avatar = '🧑';
+      name = '我';
+    } else {
+      const char = getChar(m.authorId);
+      avatar = char ? getAvatarHtml(char.avatarImg, char.avatar || '😀') : '😀';
+      name = char ? (char.nickname || char.name) : '未知角色';
+    }
+
+    const liked = m.liked || false;
+    const comments = m.comments || [];
+
+    let commentsHtml = '';
+    if (comments.length || true) {
+      commentsHtml = `<div class="moment-comments">`;
+      comments.forEach(c => {
+        commentsHtml += `<div class="moment-comment"><span class="moment-comment-name">${esc(c.name)}</span>: ${esc(c.text)}</div>`;
+      });
+      commentsHtml += `<div class="moment-comment-input-wrap">
+        <input class="moment-comment-input" placeholder="评论..." data-moment-idx="${realIdx}">
+        <button class="moment-comment-send" data-moment-idx="${realIdx}">发送</button>
+      </div></div>`;
+    }
+
+    card.innerHTML = `
+      <div class="moment-header">
+        <div class="moment-avatar">${typeof avatar === 'string' && avatar.startsWith('<') ? avatar : esc(avatar)}</div>
+        <div class="moment-author-info">
+          <div class="moment-author-name">${esc(name)}</div>
+          <div class="moment-time">${fmtMomentTime(m.time)}</div>
+        </div>
+      </div>
+      <div class="moment-text">${esc(m.text)}</div>
+      <div class="moment-actions">
+        <button class="moment-action-btn ${liked ? 'liked' : ''}" data-like-idx="${realIdx}">
+          <svg viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>${liked ? '已赞' : '赞'}</span>
+        </button>
+        <button class="moment-action-btn" data-comment-focus="${realIdx}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>评论</span>
+        </button>
+      </div>
+      ${commentsHtml}
+    `;
+    list.appendChild(card);
+  });
+
+  // 绑定点赞
+  list.querySelectorAll('[data-like-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.likeIdx);
+      moments[idx].liked = !moments[idx].liked;
+      saveMoments();
+      renderMoments();
+    });
+  });
+
+  // 绑定评论发送
+  list.querySelectorAll('.moment-comment-send').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.momentIdx);
+      const input = list.querySelector(`.moment-comment-input[data-moment-idx="${idx}"]`);
+      const text = input.value.trim();
+      if (!text) return;
+      if (!moments[idx].comments) moments[idx].comments = [];
+      moments[idx].comments.push({ name: '我', text, time: Date.now() });
+      saveMoments();
+      input.value = '';
+      renderMoments();
+    });
+  });
+
+  // 绑定评论聚焦
+  list.querySelectorAll('[data-comment-focus]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = btn.dataset.commentFocus;
+      const input = list.querySelector(`.moment-comment-input[data-moment-idx="${idx}"]`);
+      if (input) input.focus();
+    });
+  });
+}
+
+function fmtMomentTime(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+  if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+  const d = new Date(ts);
+  return (d.getMonth()+1) + '月' + d.getDate() + '日';
+}
+
+function openNewMoment() {
+  const select = document.getElementById('moment-author');
+  // 填充角色列表
+  select.innerHTML = '<option value="me">我自己</option>';
+  characters.forEach(c => {
+    select.innerHTML += `<option value="${c.id}">${esc(c.nickname || c.name)}</option>`;
+  });
+  document.getElementById('moment-text').value = '';
+  showModal('modal-new-moment');
+}
+
+function publishMoment() {
+  const authorId = document.getElementById('moment-author').value;
+  const text = document.getElementById('moment-text').value.trim();
+  if (!text) return;
+  moments.push({
+    id: 'm_' + Date.now(),
+    authorId,
+    text,
+    time: Date.now(),
+    liked: false,
+    comments: [],
+  });
+  saveMoments();
+  hideModal('modal-new-moment');
+  renderMoments();
+  toast('动态已发布', 'success');
+}
+
+// Tab 切换
+document.getElementById('tab-moments').addEventListener('click', () => {
+  renderMoments();
+  navigateTo('moments');
+});
+document.getElementById('tab-messages-2').addEventListener('click', () => {
+  renderChatList();
+  // 回到聊天列表
+  pageHistory = ['home', 'chatList'];
+  Object.values(pages).forEach(p => p.classList.remove('active'));
+  pages.chatList.classList.add('active');
+});
+document.getElementById('moments-back').addEventListener('click', goBack);
+document.getElementById('btn-new-moment').addEventListener('click', openNewMoment);
+document.getElementById('moment-cancel').addEventListener('click', () => hideModal('modal-new-moment'));
+document.getElementById('moment-publish').addEventListener('click', publishMoment);
 
 // ---------- 初始化 ----------
 loadChars();
+loadMoments();
 loadConfig();
 document.documentElement.dataset.theme = config.theme;
 console.log('Nocturne 1.0 loaded');
